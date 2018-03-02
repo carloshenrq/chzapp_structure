@@ -40,7 +40,7 @@ if(!file_exists('vendor/autoload.php'))
 
 // Includes the vendor/autoload.php to load all dependencies if need...
 require_once 'vendor/autoload.php';
-require_once 'App/autoload.php';
+require_once 'app/autoload.php';
 
 // Creates the instance from app and them run it
 $app = new App(DEVELOPER_MODE);
