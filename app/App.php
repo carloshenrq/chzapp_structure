@@ -52,7 +52,7 @@ class App extends Application
 	/**
 	 * @see Application::installSchema()
 	 */
-	public function installSchema($schema)
+	public function installSchema($schema, $name = 'default')
 	{
 		return;
 	}
