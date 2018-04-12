@@ -56,14 +56,5 @@ class App extends Application
 	{
 		return;
 	}
-
-	/**
-	 * @see Application::canHook()
-	 */
-	public function canHook()
-	{
-		return true;
-	}
-
 }
 
