@@ -179,8 +179,10 @@ class Asset extends Controller
      */
     public function js_GET($response, $args)
     {
+        $jsFile = $this->getJsFile($args['file']);
+
         // Obtém o conteúdo do arquivo JS
-        return $response->write($args['file'])
+        return $response->write($jsFile)
                         ->withHeader('Content-Type', 'application/javascript');
     }
 
