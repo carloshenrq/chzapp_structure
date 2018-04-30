@@ -60,6 +60,12 @@ class Asset extends Controller
     private $cssDir;
 
     /**
+     * Diretório HOOK dentro de /
+     * @var string
+     */
+    private $hookDir;
+
+    /**
      * @see Controller::init()
      */
     protected function init()
@@ -75,6 +81,11 @@ class Asset extends Controller
         $this->cssDir = realpath(join(DIRECTORY_SEPARATOR, [
             $this->assetDir, 'css'
         ]));
+
+        if($this->getApplication()->canHook())
+            $this->hookDir = realpath(join(DIRECTORY_SEPARATOR, [__DIR__, '..', '..', 'hooks']));
+        else
+            $this->hookDir = false;
 
         // Adiciona expressão regular para obter arquivos javascript.
         $this->addRouteRegexp('/^\/asset\/js\/(.*)$/i', '/asset/js/{file}');
@@ -114,37 +125,12 @@ class Asset extends Controller
      */
     public function scss_GET($response, $args)
     {
-        // Obtém o caminho para o arquivo a ser enviado.
-        $cssFile = realpath(join(DIRECTORY_SEPARATOR, [
-            $this->cssDir,
-            $args['file']
-        ]));
-
         // Arquivo de CSS para retorno
-        $cssContent = $this->getScssFile($cssFile, true, [], $this->cssDir);
+        $cssContent = $this->getScssFile($args['file'], true, [], $this->cssDir);
 
         // Retorna o conteúdo do arquivo SCSS.
         return $response->write($cssContent)
                         ->withHeader('Content-Type', 'text/css');
-    }
-
-    /**
-     * Obtém um arquivo javascript e devolve para a tela.
-     *
-     * @param $response
-     * @param $args
-     */
-    public function js_GET($response, $args)
-    {
-        // Obtém o caminho para o arquivo a ser enviado.
-        $jsFile = realpath(join(DIRECTORY_SEPARATOR, [
-            $this->jsDir,
-            $args['file']
-        ]));
-
-        // Obtém o conteúdo do arquivo JS
-        return $response->write($this->getJsFile($jsFile))
-                        ->withHeader('Content-Type', 'application/javascript');
     }
 
     /**
@@ -159,11 +145,43 @@ class Asset extends Controller
      */
     private function getScssFile($cssFile, $minify = true, $vars = [], $importPath = __DIR__)
     {
+        $css = $cssFile;
+        $cssFile = false;
+
+        // Prefere o arquivo HOOK ao arquivo original...
+        if($this->hookDir !== false)
+        {
+            $cssFile = realpath(join(DIRECTORY_SEPARATOR, [
+                $this->hookDir,
+                $css
+            ]));
+        }
+
+        // Obtém o caminho para o arquivo a ser enviado.
+        if($cssFile === false)
+            $cssFile = realpath(join(DIRECTORY_SEPARATOR, [
+                $this->cssDir,
+                $css
+            ]));
+
         return $this->getFileFromCache($cssFile,
                         file_get_contents($cssFile),
                         $minify,
                         $vars,
                         $importPath);
+    }
+
+    /**
+     * Obtém um arquivo javascript e devolve para a tela.
+     *
+     * @param $response
+     * @param $args
+     */
+    public function js_GET($response, $args)
+    {
+        // Obtém o conteúdo do arquivo JS
+        return $response->write($args['file'])
+                        ->withHeader('Content-Type', 'application/javascript');
     }
 
     /**
@@ -175,6 +193,23 @@ class Asset extends Controller
      */
     private function getJsFile($jsFile)
     {
+        $js = $jsFile;
+        $jsFile = false;
+
+        if($this->hookDir !== false)
+        {
+            $jsFile = realpath(join(DIRECTORY_SEPARATOR, [
+                $this->hookDir,
+                $js
+            ]));
+        }
+
+        if($jsFile === false)
+            $jsFile = realpath(join(DIRECTORY_SEPARATOR, [
+                $this->jsDir,
+                $js
+            ]));
+
         return $this->getFileFromCache($jsFile, file_get_contents($jsFile));
     }
 
